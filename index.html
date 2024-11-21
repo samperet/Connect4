@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect 4</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5dc; /* Static Beige */
+    }
+
+    #start-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .title {
+      font-size: 3em;
+      font-family: 'Lobster', cursive;
+      background: linear-gradient(90deg, #C9485B, #96D1C7, #C9485B);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradient-move 6s infinite ease-in-out;
+      transform: rotate(-10deg);
+      padding: 20px;
+    }
+
+    @keyframes gradient-move {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .start-button {
+      font-size: 1.5em;
+      padding: 10px 20px;
+      margin-top: 20px;
+      cursor: pointer;
+      border: none;
+      background-color: #555;
+      color: white;
+      border-radius: 5px;
+    }
+
+    #game-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      position: relative;
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(7, 60px);
+      grid-gap: 5px;
+      position: relative;
+    }
+
+    .cell {
+      width: 60px;
+      height: 60px;
+      background-color: #eee;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .maroon { background-color: #C9485B; }
+    .teal { background-color: #96D1C7; }
+
+    .info {
+      font-size: 1.5em;
+      margin: 20px 0;
+      font-family: 'Pacifico', cursive;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+    }
+
+    .maroon-turn {
+      color: #C9485B; /* Maroon color */
+    }
+
+    .teal-turn {
+      color: #96D1C7; /* Teal color */
+    }
+
+    .winner {
+      font-size: 2em;
+      font-family: 'Pacifico', cursive;
+    }
+
+    .maroon-wins {
+      color: #C9485B; /* Maroon color */
+    }
+
+    .teal-wins {
+      color: #96D1C7; /* Teal color */
+    }
+
+    .banana {
+      position: absolute;
+      width: 100px;
+      height: auto;
+      display: none;
+      z-index: 1000;
+      animation: bounce 5s infinite ease-in-out, move 8s infinite linear;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-50px); }
+    }
+
+    @keyframes move {
+      0% { left: 0; top: 0; }
+      25% { left: calc(100% - 100px); top: 0; }
+      50% { left: calc(100% - 100px); top: calc(100% - 100px); }
+      75% { left: 0; top: calc(100% - 100px); }
+      100% { left: 0; top: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="start-screen">
+  <div class="title">Connect 4</div>
+  <button class="start-button" onclick="startGame()">Start Game</button>
+</div>
+
+<div id="game-screen">
+  <div class="info" id="turn-info">Maroon's Turn</div>
+  <div class="game-board" id="game-board"></div>
+  <img src="banana.gif" alt="banana" class="banana" id="banana">
+</div>
+
+<audio id="maroon-sound" src="1.mp3"></audio>
+<audio id="teal-sound" src="2.mp3"></audio>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+  let currentPlayer = 'maroon';
+  let nextPlayer = 'maroon'; // Alternates who starts
+  let board = Array(6).fill(null).map(() => Array(7).fill(null));
+  let gameOver = false;
+
+  const startGame = () => {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'flex';
+
+    // Set the current player to the next player
+    currentPlayer = nextPlayer;
+    updateTurnInfo();
+
+    renderBoard();
+  };
+
+  const renderBoard = () => {
+    const gameBoard = document.getElementById('game-board');
+    gameBoard.innerHTML = ''; // Clear the board
+
+    for (let row = 0; row < 6; row++) {
+      for (let col = 0; col < 7; col++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.row = row;
+        cell.dataset.col = col;
+        if (!gameOver) {
+          cell.onclick = (event) => {
+            event.stopPropagation(); // Prevent the event from bubbling up
+            dropChip(col);
+          };
+        }
+        if (board[row][col]) cell.classList.add(board[row][col]);
+        gameBoard.appendChild(cell);
+      }
+    }
+  };
+
+  const dropChip = (col) => {
+    if (gameOver) return;
+
+    for (let row = 5; row >= 0; row--) {
+      if (!board[row][col]) {
+        board[row][col] = currentPlayer;
+        playSound();
+        if (checkWin(row, col)) {
+          announceWin();
+          gameOver = true;
+          renderBoard(); // Render the board after announcing the win
+        } else {
+          switchPlayer();
+          renderBoard();
+        }
+        break;
+      }
+    }
+  };
+
+  const switchPlayer = () => {
+    currentPlayer = currentPlayer === 'maroon' ? 'teal' : 'maroon';
+    updateTurnInfo();
+  };
+
+  const updateTurnInfo = () => {
+    const turnInfo = document.getElementById('turn-info');
+    if (currentPlayer === 'maroon') {
+      turnInfo.textContent = "Maroon's Turn";
+      turnInfo.className = 'info maroon-turn';
+    } else {
+      turnInfo.textContent = "Teal's Turn";
+      turnInfo.className = 'info teal-turn';
+    }
+  };
+
+  const playSound = () => {
+    const sound = currentPlayer === 'maroon' ? document.getElementById('maroon-sound') : document.getElementById('teal-sound');
+    sound.play();
+  };
+
+  const checkWin = (row, col) => {
+    const directions = [
+      [0, 1], [1, 0], [1, 1], [1, -1]
+    ];
+
+    for (const [dx, dy] of directions) {
+      if (countInDirection(row, col, dx, dy) + countInDirection(row, col, -dx, -dy) >= 3) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const countInDirection = (row, col, dx, dy) => {
+    const color = board[row][col];
+    let count = 0;
+
+    for (let i = 1; i < 4; i++) {
+      const r = row + dx * i;
+      const c = col + dy * i;
+      if (r < 0 || r >= 6 || c < 0 || c >= 7 || board[r][c] !== color) break;
+      count++;
+    }
+    return count;
+  };
+
+  const announceWin = () => {
+    const turnInfo = document.getElementById('turn-info');
+    turnInfo.className = 'info winner';
+    turnInfo.textContent = currentPlayer === 'maroon' ? "Maroon Wins!" : "Teal Wins!";
+    turnInfo.classList.add(currentPlayer === 'maroon' ? 'maroon-wins' : 'teal-wins');
+
+    // Show and animate the banana
+    const banana = document.getElementById('banana');
+    banana.style.display = 'block';
+
+    throwConfetti();
+
+    // Alternate next player
+    nextPlayer = currentPlayer === 'maroon' ? 'teal' : 'maroon';
+  };
+
+  const throwConfetti = () => {
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  };
+
+  const resetGame = () => {
+    board = Array(6).fill(null).map(() => Array(7).fill(null));
+    gameOver = false;
+
+    // Hide the banana
+    document.getElementById('banana').style.display = 'none';
+
+    startGame();
+  };
+
+  document.getElementById('game-board').addEventListener('click', () => {
+    if (gameOver) {
+      resetGame();
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -60,6 +60,7 @@
       justify-content: center;
       height: 100vh;
       position: relative;
+      overflow: hidden;
     }
 
     .game-board {
@@ -114,20 +115,9 @@
       height: auto;
       display: none;
       z-index: 1000;
-      animation: bounce 5s infinite ease-in-out, move 8s infinite linear;
-    }
-
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-50px); }
-    }
-
-    @keyframes move {
-      0% { left: 0; top: 0; }
-      25% { left: calc(100% - 100px); top: 0; }
-      50% { left: calc(100% - 100px); top: calc(100% - 100px); }
-      75% { left: 0; top: calc(100% - 100px); }
-      100% { left: 0; top: 0; }
+      transition: top 1.5s ease, left 1.5s ease; /* Smooth movement */
+      top: 0; /* Set initial top position */
+      left: 0; /* Set initial left position */
     }
   </style>
 </head>
@@ -153,6 +143,7 @@
   let nextPlayer = 'maroon'; // Alternates who starts
   let board = Array(6).fill(null).map(() => Array(7).fill(null));
   let gameOver = false;
+  let bananaInterval;
 
   const startGame = () => {
     document.getElementById('start-screen').style.display = 'none';
@@ -263,6 +254,7 @@
     // Show and animate the banana
     const banana = document.getElementById('banana');
     banana.style.display = 'block';
+    startBananaDance();
 
     throwConfetti();
 
@@ -285,8 +277,40 @@
     // Hide the banana
     document.getElementById('banana').style.display = 'none';
 
+    // Clear the banana dance interval
+    clearInterval(bananaInterval);
+
     startGame();
   };
+
+  // Function to make the banana move smoothly to random spots on the screen
+  const startBananaDance = () => {
+    const banana = document.getElementById('banana');
+    const gameScreen = document.getElementById('game-screen');
+    const maxX = gameScreen.clientWidth - banana.clientWidth;
+    const maxY = gameScreen.clientHeight - banana.clientHeight;
+
+    // Set initial random position for a smooth start
+    const randomX = Math.random() * maxX;
+    const randomY = Math.random() * maxY;
+    banana.style.top = `${randomY}px`;
+    banana.style.left = `${randomX}px`;
+
+    bananaInterval = setInterval(() => {
+      if (!gameOver) return;
+      const nextRandomX = Math.random() * maxX;
+      const nextRandomY = Math.random() * maxY;
+      banana.style.top = `${nextRandomY}px`;
+      banana.style.left = `${nextRandomX}px`;
+    }, 1500);
+  };
+
+  // Listen for 'R' key to reset the game
+  document.addEventListener('keydown', (event) => {
+    if (event.key.toLowerCase() === 'r') {
+      resetGame();
+    }
+  });
 
   document.getElementById('game-board').addEventListener('click', () => {
     if (gameOver) {

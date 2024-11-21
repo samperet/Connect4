@@ -22,17 +22,18 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
+      padding: 2vw;
     }
 
     .title {
-      font-size: 3em;
+      font-size: 10vw; /* Responsive font size */
       font-family: 'Lobster', cursive;
       background: linear-gradient(90deg, #C9485B, #96D1C7, #C9485B);
       background-size: 300% 300%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: gradient-move 6s infinite ease-in-out;
-      transform: rotate(-10deg);
+      transform: rotate(-5deg);
       padding: 20px;
     }
 
@@ -43,9 +44,9 @@
     }
 
     .start-button {
-      font-size: 1.5em;
-      padding: 10px 20px;
-      margin-top: 20px;
+      font-size: 5vw; /* Responsive font size */
+      padding: 3vw 5vw;
+      margin-top: 5vw;
       cursor: pointer;
       border: none;
       background-color: #555;
@@ -61,18 +62,19 @@
       height: 100vh;
       position: relative;
       overflow: hidden;
+      padding: 2vw;
     }
 
     .game-board {
       display: grid;
-      grid-template-columns: repeat(7, 60px);
-      grid-gap: 5px;
+      grid-template-columns: repeat(7, 12vw); /* Adjusted for mobile */
+      grid-gap: 1vw;
       position: relative;
     }
 
     .cell {
-      width: 60px;
-      height: 60px;
+      width: 12vw; /* Adjusted for mobile */
+      height: 12vw; /* Adjusted for mobile */
       background-color: #eee;
       border-radius: 50%;
       cursor: pointer;
@@ -82,8 +84,8 @@
     .teal { background-color: #96D1C7; }
 
     .info {
-      font-size: 1.5em;
-      margin: 20px 0;
+      font-size: 5vw; /* Responsive font size */
+      margin: 5vw 0;
       font-family: 'Pacifico', cursive;
       text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
     }
@@ -97,7 +99,7 @@
     }
 
     .winner {
-      font-size: 2em;
+      font-size: 6vw; /* Responsive font size */
       font-family: 'Pacifico', cursive;
     }
 
@@ -111,7 +113,7 @@
 
     .banana {
       position: absolute;
-      width: 100px;
+      width: 15vw; /* Adjusted for mobile */
       height: auto;
       display: none;
       z-index: 1000;
